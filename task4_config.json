@@ -1,0 +1,30 @@
+{
+  "data": {
+    "csv_path": "outputs/tasks1_2/preprocessed_tweets.csv",
+    "text_column": "processed_text",
+    "raw_text_column": "text",
+    "label_column": "sentiment",
+    "negative_label": "negative",
+    "encoding": "utf-8-sig",
+    "random_seed": 42
+  },
+  "selection": {
+    "num_examples": 15,
+    "min_tokens": 4,
+    "strategy": "diverse_length"
+  },
+  "vectors": {
+    "max_features": 5000,
+    "min_df": 2,
+    "max_df": 0.95,
+    "ngram_range": [1, 1],
+    "vector_size": 50,
+    "token_pattern": "[A-Za-z]+(?:'[A-Za-z]+)?|\\d+(?:\\.\\d+)?|[!?]+"
+  },
+  "output": {
+    "output_dir": "outputs/task4",
+    "plot_format": "png",
+    "figure_dpi": 160,
+    "top_pairs": 10
+  }
+}
