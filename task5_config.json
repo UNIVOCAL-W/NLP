@@ -1,39 +1,4 @@
 {
-  "data": {
-    "csv_path": "outputs/tasks1_2/preprocessed_tweets.csv",
-    "text_column": "text",
-    "label_column": "sentiment",
-    "sample_size": null,
-    "random_seed": 42,
-    "encoding": "utf-8-sig"
-  },
-  "task": {
-    "test_size": 0.2,
-    "run_multiclass": true,
-    "run_binary": true,
-    "binary_drop_label": "neutral",
-    "multiclass_label_order": ["negative", "neutral", "positive"],
-    "binary_label_order": ["negative", "positive"]
-  },
-  "model": {
-    "model_name": "distilbert-base-uncased",
-    "max_length": 128,
-    "batch_size": 8,
-    "epochs": 3,
-    "learning_rate": 0.00002,
-    "weight_decay": 0.01,
-    "warmup_ratio": 0.1,
-    "device": "auto"
-  },
-  "output": {
-    "output_dir": "outputs/task5",
-    "save_model": false,
-    "plot_format": "png",
-    "figure_dpi": 160,
-    "error_examples_per_setting": 50,
-    "save_full_predictions": true
-  },
-  "progress": {
-    "enabled": true
-  }
+  "input_csv": "outputs/tasks1_2/preprocessed_tweets.csv",
+  "output_dir": "outputs/task5"
 }
