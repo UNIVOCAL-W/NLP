@@ -1,6 +1,5 @@
 import json
 import re
-import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -19,17 +18,13 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 
-try:
-    import torch
-    from torch import nn
-except ImportError:
-    torch = None
-    nn = None
 
-try:
-    from tqdm.auto import tqdm
-except ImportError:
-    tqdm = None
+import torch
+from torch import nn
+
+
+from tqdm.auto import tqdm
+
 
 
 CONFIG_FILE = "task3_config.json"
@@ -191,7 +186,6 @@ def train_ffnn(x_train, train_labels, labels, experiment_id, device):
     loss_fn = nn.CrossEntropyLoss()
     rng = np.random.default_rng(RANDOM_SEED)
 
-    start_time = time.perf_counter()
     for epoch in range(EPOCHS):
         model.train()
         order = rng.permutation(len(y_train))
@@ -222,7 +216,7 @@ def train_ffnn(x_train, train_labels, labels, experiment_id, device):
 
     if device.type == "cuda":
         torch.cuda.synchronize(device)
-    return model, time.perf_counter() - start_time
+    return model
 
 
 def predict_ffnn(model, x_test, labels, experiment_id, device):
@@ -230,7 +224,6 @@ def predict_ffnn(model, x_test, labels, experiment_id, device):
     predictions = []
     probabilities = []
 
-    start_time = time.perf_counter()
     batches = range(0, x_test.shape[0], BATCH_SIZE)
     iterator = progress_bar(batches, f"{experiment_id} predict")
 
@@ -248,7 +241,7 @@ def predict_ffnn(model, x_test, labels, experiment_id, device):
         torch.cuda.synchronize(device)
 
     probabilities = np.vstack(probabilities) if probabilities else np.empty((0, len(labels)))
-    return np.asarray(predictions), probabilities, np.asarray(labels), time.perf_counter() - start_time
+    return np.asarray(predictions), probabilities, np.asarray(labels)
 
 
 def calculate_metrics(y_true, y_pred, labels):
@@ -350,30 +343,24 @@ def run_one_experiment(setting, train_df, test_df, labels, vectorizer_name, mode
     print(f"\nRunning {experiment_id}")
 
     vectorizer = build_vectorizer(vectorizer_name)
-    start = time.perf_counter()
     x_train = vectorizer.fit_transform(train_df[TEXT_COL].astype(str).tolist())
     x_test = vectorizer.transform(test_df[TEXT_COL].astype(str).tolist())
-    vectorize_seconds = time.perf_counter() - start
 
     train_labels = train_df[LABEL_COL].astype(str).tolist()
     if model_name == "naive_bayes":
         model = MultinomialNB(alpha=1.0, fit_prior=True)
 
-        start = time.perf_counter()
         model.fit(x_train, train_labels)
-        train_seconds = time.perf_counter() - start
 
-        start = time.perf_counter()
         y_pred = model.predict(x_test)
         probabilities = model.predict_proba(x_test)
-        predict_seconds = time.perf_counter() - start
         model_classes = model.classes_
         framework = "sklearn"
         device_name = "cpu"
         training_mode = "fit"
     else:
-        model, train_seconds = train_ffnn(x_train, train_labels, labels, experiment_id, device)
-        y_pred, probabilities, model_classes, predict_seconds = predict_ffnn(
+        model = train_ffnn(x_train, train_labels, labels, experiment_id, device)
+        y_pred, probabilities, model_classes = predict_ffnn(
             model, x_test, labels, experiment_id, device
         )
         framework = "pytorch"
@@ -391,13 +378,9 @@ def run_one_experiment(setting, train_df, test_df, labels, vectorizer_name, mode
             "train_rows": len(train_df),
             "test_rows": len(test_df),
             "features": int(x_train.shape[1]),
-            "class_handling": "none",
             "framework": framework,
             "device": device_name,
             "training_mode": training_mode,
-            "vectorize_seconds": round(vectorize_seconds, 4),
-            "train_seconds": round(train_seconds, 4),
-            "predict_seconds": round(predict_seconds, 4),
         }
     )
 
@@ -457,13 +440,9 @@ def run_all_experiments(df, dirs, device):
         "features",
         "train_rows",
         "test_rows",
-        "class_handling",
         "framework",
         "device",
         "training_mode",
-        "vectorize_seconds",
-        "train_seconds",
-        "predict_seconds",
         "top_confusions",
     ]
     metrics_df = metrics_df[columns]
